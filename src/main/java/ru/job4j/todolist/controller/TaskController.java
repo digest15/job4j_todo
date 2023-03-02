@@ -24,13 +24,24 @@ public class TaskController {
 
     @GetMapping("/done")
     public String getAllDone(Model model) {
-        model.addAttribute("tasks", taskService.findAll(true));
-        return "tasks/listDone";
+        try {
+            model.addAttribute("tasks", taskService.findAll(true));
+            return "tasks/listDone";
+        } catch (Exception e) {
+            model.addAttribute("message", e.getMessage());
+            return "errors/404";
+        }
     }
 
     @GetMapping("/new")
     public String getAllNew(Model model) {
-        model.addAttribute("tasks", taskService.findAll(false));
-        return "tasks/listNew";
+        try {
+            model.addAttribute("tasks", taskService.findAll(false));
+            return "tasks/listNew";
+        } catch (Exception e) {
+            model.addAttribute("message", e.getMessage());
+            return "errors/404";
+        }
     }
+
 }
