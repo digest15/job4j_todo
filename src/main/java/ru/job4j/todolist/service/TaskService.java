@@ -16,7 +16,9 @@ public interface TaskService {
 
     List<Task> findAll(boolean isDone);
 
-    Optional<Task> findById(int id);
+    Task findById(int id);
 
     List<Task> findLikeDescription(String key);
+
+    void doneTask(Task task, Boolean isDone);
 }

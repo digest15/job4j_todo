@@ -5,6 +5,7 @@ import ru.job4j.todolist.model.Task;
 import ru.job4j.todolist.repository.TaskRepository;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -46,12 +47,21 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public Optional<Task> findById(int id) {
-        return taskRepository.findById(id);
+    public Task findById(int id) {
+        return taskRepository.findById(id).orElseThrow(() -> new IllegalArgumentException(
+                String.format("Wrong id %s", id)
+        ));
     }
 
     @Override
     public List<Task> findLikeDescription(String key) {
         return findLikeDescription(key);
+    }
+
+    @Override
+    public void doneTask(Task task, Boolean isDone) {
+        Objects.requireNonNull(isDone);
+        task.setDone(isDone);
+        taskRepository.update(task);
     }
 }
