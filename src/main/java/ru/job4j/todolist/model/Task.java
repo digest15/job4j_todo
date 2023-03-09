@@ -20,6 +20,6 @@ public class Task {
     private int id;
     private String description;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    private LocalDateTime created;
+    private LocalDateTime created = LocalDateTime.now();
     private boolean done;
 }

@@ -3,14 +3,13 @@ package ru.job4j.todolist.service;
 import ru.job4j.todolist.model.Task;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface TaskService {
     Task add(Task task);
 
-    void update(Task task);
+    boolean update(Task task);
 
-    void delete(Task task);
+    boolean delete(int id);
 
     List<Task> findAll();
 
@@ -20,5 +19,5 @@ public interface TaskService {
 
     List<Task> findLikeDescription(String key);
 
-    void doneTask(Task task, Boolean isDone);
+    boolean doneTask(Task task, Boolean isDone);
 }

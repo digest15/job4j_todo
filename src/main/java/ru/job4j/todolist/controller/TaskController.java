@@ -24,24 +24,14 @@ public class TaskController {
 
     @GetMapping("/done")
     public String getAllDone(Model model) {
-        try {
-            model.addAttribute("tasks", taskService.findAll(true));
-            return "tasks/listDone";
-        } catch (Exception e) {
-            model.addAttribute("message", e.getMessage());
-            return "errors/404";
-        }
+        model.addAttribute("tasks", taskService.findAll(true));
+        return "tasks/listDone";
     }
 
     @GetMapping("/new")
     public String getAllNew(Model model) {
-        try {
-            model.addAttribute("tasks", taskService.findAll(false));
-            return "tasks/listNew";
-        } catch (Exception e) {
-            model.addAttribute("message", e.getMessage());
-            return "errors/404";
-        }
+        model.addAttribute("tasks", taskService.findAll(false));
+        return "tasks/listNew";
     }
 
     @GetMapping("/create")
@@ -51,68 +41,69 @@ public class TaskController {
 
     @PostMapping("/create")
     public String create(@ModelAttribute Task task, Model model) {
-        try {
-            taskService.add(task);
+        Task newTask = taskService.add(task);
+
+        if (newTask != null) {
             return "redirect:/tasks";
-        } catch (Exception e) {
-            model.addAttribute("message", e.getMessage());
+        } else {
+            model.addAttribute("message", "Error when save Task " + task);
             return "errors/404";
         }
     }
 
     @PostMapping("/done/{isDone}")
     public String setDone(@ModelAttribute Task task, @PathVariable Boolean isDone,  Model model) {
-        try {
-            taskService.doneTask(task, isDone);
+        if (taskService.doneTask(task, isDone)) {
             model.addAttribute("task", task);
             return "redirect:/tasks/" + task.getId();
-        } catch (Exception e) {
-            model.addAttribute("message", e.getMessage());
+        } else {
+            model.addAttribute("message", "Error when update task " + task);
             return "errors/404";
         }
     }
 
     @PostMapping("/update")
     public String update(@ModelAttribute Task task,  Model model) {
-        try {
-            taskService.update(task);
+        if (taskService.update(task)) {
             model.addAttribute("task", task);
             return "redirect:/tasks/" + task.getId();
-        } catch (Exception e) {
-            model.addAttribute("message", e.getMessage());
+        } else {
+            model.addAttribute("message", "Error when update task " + task);
             return "errors/404";
         }
     }
 
     @GetMapping("/{id}")
     public String getById(Model model, @PathVariable int id) {
-        try {
-            model.addAttribute("task", taskService.findById(id));
+        Task task = taskService.findById(id);
+        if (task != null) {
+            model.addAttribute("task", task);
             return "tasks/one";
-        } catch (Exception e) {
-            model.addAttribute("message", e.getMessage());
+        } else {
+            model.addAttribute("message", "Not found task by ID: " + id);
             return "errors/404";
         }
+
     }
 
     @GetMapping("edit/{id}")
     public String edit(Model model, @PathVariable int id) {
-        try {
-            model.addAttribute("task", taskService.findById(id));
+        Task task = taskService.findById(id);
+        if (task != null) {
+            model.addAttribute("task", task);
             return "tasks/edit";
-        } catch (Exception e) {
-            model.addAttribute("message", e.getMessage());
+        } else  {
+            model.addAttribute("message", "Not found task by ID: " + id);
             return "errors/404";
         }
     }
 
     @GetMapping("delete/{id}")
     public String delete(Model model, @PathVariable int id) {
-        try {
-            taskService.delete(taskService.findById(id));
+        if (taskService.delete(id)) {
             return "redirect:/tasks";
-        } catch (Exception e) {
-            model.addAttribute("message", e.getMessage());
+        } else  {
+            model.addAttribute("message", "Error when delete Task for id: " + id);
             return "errors/404";
         }
     }

@@ -6,8 +6,6 @@ import ru.job4j.todolist.repository.TaskRepository;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class TaskServiceImpl implements TaskService {
@@ -24,13 +22,13 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public void update(Task task) {
-        taskRepository.update(task);
+    public boolean update(Task task) {
+        return taskRepository.update(task);
     }
 
     @Override
-    public void delete(Task task) {
-        taskRepository.delete(task);
+    public boolean delete(int id) {
+        return taskRepository.delete(id);
     }
 
     @Override
@@ -40,17 +38,12 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public List<Task> findAll(boolean isDone) {
-        return taskRepository.findAll()
-                .stream()
-                .filter(task -> task.isDone() == isDone)
-                .collect(Collectors.toList());
+        return taskRepository.findByDone(isDone);
     }
 
     @Override
     public Task findById(int id) {
-        return taskRepository.findById(id).orElseThrow(() -> new IllegalArgumentException(
-                String.format("Wrong id %s", id)
-        ));
+        return taskRepository.findById(id).orElse(null);
     }
 
     @Override
@@ -59,9 +52,8 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public void doneTask(Task task, Boolean isDone) {
+    public boolean doneTask(Task task, Boolean isDone) {
         Objects.requireNonNull(isDone);
-        task.setDone(isDone);
-        taskRepository.update(task);
+        return taskRepository.updateByDone(task.getId(), isDone);
     }
 }

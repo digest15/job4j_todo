@@ -8,13 +8,18 @@ import java.util.Optional;
 public interface TaskRepository {
     Task add(Task task);
 
-    void update(Task task);
+    boolean update(Task task);
 
-    void delete(Task task);
+    boolean updateByDone(int id, boolean isDone);
+
+    boolean delete(int id);
 
     List<Task> findAll();
 
     Optional<Task> findById(int id);
 
     List<Task> findLikeDescription(String key);
+
+    List<Task> findByDone(boolean isDone);
+
 }

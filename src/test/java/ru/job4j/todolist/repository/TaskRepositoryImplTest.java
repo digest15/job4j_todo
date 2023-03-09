@@ -43,7 +43,7 @@ class TaskRepositoryImplTest {
     @AfterEach
     public void clearRepository() {
         taskRepository.findAll()
-                .forEach(task -> taskRepository.delete(task));
+                .forEach(task -> taskRepository.delete(task.getId()));
     }
 
     @Test
@@ -68,6 +68,9 @@ class TaskRepositoryImplTest {
         var task3 = taskRepository.add(Task.builder().created(creationDate).description("task3").build());
         var result = taskRepository.findAll();
 
+        assertThat(task1).isNotNull();
+        assertThat(task2).isNotNull();
+        assertThat(task3).isNotNull();
         assertThat(result).isEqualTo(List.of(task1, task2, task3));
     }
 
@@ -81,7 +84,9 @@ class TaskRepositoryImplTest {
     public void whenDeleteThenGetEmptyOptional() {
         var creationDate = now().truncatedTo(ChronoUnit.MINUTES);
         var task = taskRepository.add(Task.builder().created(creationDate).description("Task").build());
-        taskRepository.delete(task);
+        assertThat(task).isNotNull();
+
+        taskRepository.delete(task.getId());
         Optional<Task> foundTask = taskRepository.findById(task.getId());
         assertThat(foundTask).isEqualTo(Optional.empty());
     }
@@ -101,5 +106,30 @@ class TaskRepositoryImplTest {
 
         assertThat(savedTask).isPresent();
         assertThat(savedTask.get()).isEqualTo(updateTask);
+    }
+
+    @Test
+    public void whenUpdateByDone() {
+        var creationDate = now().truncatedTo(ChronoUnit.MINUTES);
+        var task = taskRepository.add(Task.builder().created(creationDate).description("Task").done(false).build());
+
+        var isDone = true;
+        taskRepository.updateByDone(task.getId(), isDone);
+        var actualTask = taskRepository.findById(task.getId());
+
+        assertThat(actualTask.get().isDone()).isEqualTo(isDone);
+    }
+
+    @Test
+    public void whenFindTaskByDone() {
+        var creationDate = now().truncatedTo(ChronoUnit.MINUTES);
+        var task1 = taskRepository.add(Task.builder().created(creationDate).description("Task1").done(true).build());
+        var task2 = taskRepository.add(Task.builder().created(creationDate).description("Task2").done(false).build());
+
+        List<Task> newTask = taskRepository.findByDone(true);
+        assertThat(newTask).isEqualTo(List.of(task1));
+
+        List<Task> doneTask = taskRepository.findByDone(false);
+        assertThat(doneTask).isEqualTo(List.of(task2));
     }
 }

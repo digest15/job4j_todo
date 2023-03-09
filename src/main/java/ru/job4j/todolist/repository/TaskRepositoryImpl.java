@@ -1,5 +1,6 @@
 package ru.job4j.todolist.repository;
 
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.stereotype.Repository;
@@ -9,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
+@Slf4j
 public class TaskRepositoryImpl implements TaskRepository {
 
     private final SessionFactory sf;
@@ -19,46 +21,91 @@ public class TaskRepositoryImpl implements TaskRepository {
 
     @Override
     public Task add(Task task) {
+        Task result = null;
+
         var session = sf.openSession();
         try {
             session.beginTransaction();
             session.save(task);
             session.getTransaction().commit();
+
+            result = task;
         } catch (Exception e) {
             session.getTransaction().rollback();
+            log.error("Something was wrong", e);
         } finally {
             session.close();
         }
-        return task;
+
+        return result;
     }
 
     @Override
-    public void update(Task task) {
+    public boolean update(Task task) {
+        var result = false;
+
         var session = sf.openSession();
         try {
             session.beginTransaction();
             session.update(task);
             session.getTransaction().commit();
+
+            result = true;
         } catch (Exception e) {
             session.getTransaction().rollback();
+            log.error("Something was wrong", e);
         } finally {
             session.close();
         }
+
+        return result;
     }
 
     @Override
-    public void delete(Task task) {
-        var session = sf.openSession();
+    public boolean updateByDone(int id, boolean isDone) {
+        var result = false;
+
+        Session session = sf.openSession();
         try {
             session.beginTransaction();
-            session.delete(task);
+            Task task = session.createQuery("from Task WHERE id = :id", Task.class)
+                    .setParameter("id", id)
+                    .uniqueResult();
+            if (task != null) {
+                task.setDone(isDone);
+                result = true;
+            }
             session.getTransaction().commit();
         } catch (Exception e) {
             session.getTransaction().rollback();
-            e.printStackTrace();
+            log.error("Something was wrong", e);
         } finally {
             session.close();
         }
+        return result;
+    }
+
+    @Override
+    public boolean delete(int id) {
+        var result = false;
+
+        var session = sf.openSession();
+        try {
+            session.beginTransaction();
+            var count = session.createQuery("DELETE Task WHERE id = :id")
+                    .setParameter("id", id)
+                    .executeUpdate();
+            session.getTransaction().commit();
+
+            result = count > 0;
+        } catch (Exception e) {
+            session.getTransaction().rollback();
+            log.error("Something was wrong", e);
+        } finally {
+            session.close();
+        }
+
+        return result;
     }
 
     @Override
@@ -72,7 +119,7 @@ public class TaskRepositoryImpl implements TaskRepository {
             session.getTransaction().commit();
         } catch (Exception e) {
             session.getTransaction().rollback();
-            e.printStackTrace();
+            log.error("Something was wrong", e);
         } finally {
             session.close();
         }
@@ -91,7 +138,7 @@ public class TaskRepositoryImpl implements TaskRepository {
             session.getTransaction().commit();
         } catch (Exception e) {
             session.getTransaction().rollback();
-            e.printStackTrace();
+            log.error("Something was wrong", e);
         } finally {
             session.close();
         }
@@ -111,7 +158,27 @@ public class TaskRepositoryImpl implements TaskRepository {
             session.getTransaction().commit();
         } catch (Exception e) {
             session.getTransaction().rollback();
-            e.printStackTrace();
+            log.error("Something was wrong", e);
+        } finally {
+            session.close();
+        }
+        return tasks;
+    }
+
+    @Override
+    public List<Task> findByDone(boolean isDone) {
+        List<Task> tasks = List.of();
+
+        Session session = sf.openSession();
+        try {
+            session.beginTransaction();
+            tasks = session.createQuery("from Task where done = :isDone", Task.class)
+                    .setParameter("isDone", isDone)
+                    .list();
+            session.getTransaction().commit();
+        } catch (Exception e) {
+            session.getTransaction().rollback();
+            log.error("Something was wrong", e);
         } finally {
             session.close();
         }

@@ -8,7 +8,9 @@
 
 ## Веб-приложение для ведения списка задач.
 
-#### Java 17, Spring boot 2, Thymeleaf 3, Bootstrap 5, Hibernate 5, PostgreSql 14
+#### Требования к окружению
+* Java 17
+* PostgreSql 14
 
 ### Главное окно:
 ![Главное_окно](doc/img/index-view.png).
@@ -38,5 +40,13 @@
 * `Отредактировать` - перейти в режим редактирования задачи
 * `Удалить` - безвозвратно удалить задачу
 
+### Библиотеки
+* Java 17
+* Spring boot 2.7.6
+* Lombok 1.18.22
+* Thymeleaf 3
+* Bootstrap 5
+* Hibernate 5.6.11
+* PostgreSql 14
 
 #### Контакты: her_vam@mail.ru

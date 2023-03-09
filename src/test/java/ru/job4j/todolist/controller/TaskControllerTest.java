@@ -3,7 +3,6 @@ package ru.job4j.todolist.controller;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 import org.springframework.ui.ConcurrentModel;
 import ru.job4j.todolist.model.Task;
 import ru.job4j.todolist.service.TaskService;
@@ -92,16 +91,16 @@ class TaskControllerTest {
     }
 
     @Test
-    public void whenPostTaskAndWasExceptionThenRedirectErrorPage() {
-        Exception exception = new RuntimeException("Filed save task");
-        when(taskService.add(any(Task.class))).thenThrow(exception);
+    public void whenPostTaskAndNotSaveThenRedirectErrorPage() {
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false);
+        when(taskService.add(any(Task.class))).thenReturn(null);
 
         var model = new ConcurrentModel();
-        var view = taskController.create(new Task(), model);
+        var view = taskController.create(task1, model);
         var errorMessage = model.getAttribute("message");
 
         assertThat(view).isEqualTo("errors/404");
-        assertThat(errorMessage).isEqualTo(exception.getMessage());
+        assertThat(errorMessage).isEqualTo("Error when save Task " + task1);
     }
 
     @Test
@@ -109,7 +108,7 @@ class TaskControllerTest {
         var task1 = new Task(0, "Task1", LocalDateTime.now(), false);
         var taskArgCaptor = ArgumentCaptor.forClass(Task.class);
         var doneFlagCaptor = ArgumentCaptor.forClass(Boolean.class);
-        doNothing().when(taskService).doneTask(taskArgCaptor.capture(), doneFlagCaptor.capture());
+        when(taskService.doneTask(taskArgCaptor.capture(), doneFlagCaptor.capture())).thenReturn(true);
 
         var isDone = true;
         var model = new ConcurrentModel();
@@ -125,10 +124,30 @@ class TaskControllerTest {
     }
 
     @Test
+    public void whenDoneTaskAndNotUpdated() {
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false);
+        var taskArgCaptor = ArgumentCaptor.forClass(Task.class);
+        var doneFlagCaptor = ArgumentCaptor.forClass(Boolean.class);
+        when(taskService.doneTask(taskArgCaptor.capture(), doneFlagCaptor.capture())).thenReturn(false);
+
+        var isDone = false;
+        var model = new ConcurrentModel();
+        var view = taskController.setDone(task1, isDone, model);
+        var captorTask = taskArgCaptor.getValue();
+        var captorFlag = doneFlagCaptor.getValue();
+        var actualMessage = model.getAttribute("message");
+
+        assertThat(view).isEqualTo("errors/404");
+        assertThat(actualMessage).isEqualTo("Error when update task " + task1);
+        assertThat(captorTask).isEqualTo(task1);
+        assertThat(captorFlag).isEqualTo(isDone);
+    }
+
+    @Test
     public void whenUpdateTask() {
         var task1 = new Task(0, "Task1", LocalDateTime.now(), false);
         var taskArgCaptor = ArgumentCaptor.forClass(Task.class);
-        doNothing().when(taskService).update(taskArgCaptor.capture());
+        when(taskService.update(taskArgCaptor.capture())).thenReturn(true);
 
         var model = new ConcurrentModel();
         var view = taskController.update(task1, model);
@@ -137,6 +156,22 @@ class TaskControllerTest {
 
         assertThat(view).isEqualTo("redirect:/tasks/" + task1.getId());
         assertThat(actualTask).isEqualTo(task1);
+        assertThat(captorTask).isEqualTo(task1);
+    }
+
+    @Test
+    public void whenUpdateTaskAndNotUpdated() {
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false);
+        var taskArgCaptor = ArgumentCaptor.forClass(Task.class);
+        when(taskService.update(taskArgCaptor.capture())).thenReturn(false);
+
+        var model = new ConcurrentModel();
+        var view = taskController.update(task1, model);
+        var captorTask = taskArgCaptor.getValue();
+        var actualMessage = model.getAttribute("message");
+
+        assertThat(view).isEqualTo("errors/404");
+        assertThat(actualMessage).isEqualTo("Error when update task " + task1);
         assertThat(captorTask).isEqualTo(task1);
     }
 
@@ -155,15 +190,15 @@ class TaskControllerTest {
 
     @Test
     public void whenRequestTaskByIdAndNotFoundThenRedirectErrorPage() {
-        Exception exception = new RuntimeException("Task not found");
-        when(taskService.findById(any(Integer.class))).thenThrow(exception);
+        when(taskService.findById(any(Integer.class))).thenReturn(null);
+        var id = 0;
 
         var model = new ConcurrentModel();
-        var view = taskController.getById(model, 0);
+        var view = taskController.getById(model, id);
         var errorMessage = model.getAttribute("message");
 
         assertThat(view).isEqualTo("errors/404");
-        assertThat(errorMessage).isEqualTo(exception.getMessage());
+        assertThat(errorMessage).isEqualTo("Not found task by ID: " + id);
     }
 
     @Test
@@ -180,41 +215,45 @@ class TaskControllerTest {
     }
 
     @Test
+    public void whenRequestEditPageEndTaskNotFound() {
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false);
+        when(taskService.findById(any(Integer.class))).thenReturn(null);
+
+        var model = new ConcurrentModel();
+        var view = taskController.edit(model, task1.getId());
+        var errorMessage = model.getAttribute("message");
+
+        assertThat(view).isEqualTo("errors/404");
+        assertThat(errorMessage).isEqualTo("Not found task by ID: " + task1.getId());
+    }
+
+    @Test
     public void whenDeleteTask() {
         var task1 = new Task(0, "Task1", LocalDateTime.now(), false);
-        var taskCaptor = ArgumentCaptor.forClass(Task.class);
         var idCaptor = ArgumentCaptor.forClass(Integer.class);
-        when(taskService.findById(idCaptor.capture())).thenReturn(task1);
-        doNothing().when(taskService).delete(taskCaptor.capture());
+        when(taskService.delete(idCaptor.capture())).thenReturn(true);
 
         var model = new ConcurrentModel();
         var view = taskController.delete(model, task1.getId());
-        var captorTask = taskCaptor.getValue();
         var captorId = idCaptor.getValue();
 
         assertThat(view).isEqualTo("redirect:/tasks");
         assertThat(captorId).isEqualTo(task1.getId());
-        assertThat(captorTask).isEqualTo(task1);
     }
 
     @Test
-    public void whenDeleteTaskAndWasExceptionThenRedirectErrorPage() {
-        Exception exception = new RuntimeException("Delete Error");
+    public void whenDeleteTaskAndNotDeleted() {
         var task1 = new Task(0, "Task1", LocalDateTime.now(), false);
-        var taskCaptor = ArgumentCaptor.forClass(Task.class);
         var idCaptor = ArgumentCaptor.forClass(Integer.class);
-        when(taskService.findById(idCaptor.capture())).thenReturn(task1);
-        doThrow(exception).when(taskService).delete(taskCaptor.capture());
+        when(taskService.delete(idCaptor.capture())).thenReturn(false);
 
         var model = new ConcurrentModel();
         var view = taskController.delete(model, task1.getId());
-        var captorTask = taskCaptor.getValue();
         var captorId = idCaptor.getValue();
         var errorMessage = model.getAttribute("message");
 
         assertThat(captorId).isEqualTo(task1.getId());
-        assertThat(captorTask).isEqualTo(task1);
         assertThat(view).isEqualTo("errors/404");
-        assertThat(errorMessage).isEqualTo(exception.getMessage());
+        assertThat(errorMessage).isEqualTo("Error when delete Task for id: " + task1.getId());
     }
 }
