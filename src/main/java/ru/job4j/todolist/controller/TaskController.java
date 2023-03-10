@@ -43,69 +43,62 @@ public class TaskController {
     public String create(@ModelAttribute Task task, Model model) {
         Task newTask = taskService.add(task);
 
-        if (newTask != null) {
-            return "redirect:/tasks";
-        } else {
+        if (newTask == null) {
             model.addAttribute("message", "Error when save Task " + task);
             return "errors/404";
         }
+        return "redirect:/tasks";
     }
 
     @PostMapping("/done/{isDone}")
-    public String setDone(@ModelAttribute Task task, @PathVariable Boolean isDone,  Model model) {
-        if (taskService.doneTask(task, isDone)) {
-            model.addAttribute("task", task);
-            return "redirect:/tasks/" + task.getId();
-        } else {
+    public String setDone(@ModelAttribute Task task, @PathVariable Boolean isDone, Model model) {
+        if (!taskService.doneTask(task, isDone)) {
             model.addAttribute("message", "Error when update task " + task);
             return "errors/404";
         }
+        model.addAttribute("task", task);
+        return "redirect:/tasks/" + task.getId();
     }
 
     @PostMapping("/update")
-    public String update(@ModelAttribute Task task,  Model model) {
-        if (taskService.update(task)) {
-            model.addAttribute("task", task);
-            return "redirect:/tasks/" + task.getId();
-        } else {
+    public String update(@ModelAttribute Task task, Model model) {
+        if (!taskService.update(task)) {
             model.addAttribute("message", "Error when update task " + task);
             return "errors/404";
         }
+        model.addAttribute("task", task);
+        return "redirect:/tasks/" + task.getId();
     }
 
     @GetMapping("/{id}")
     public String getById(Model model, @PathVariable int id) {
         Task task = taskService.findById(id);
-        if (task != null) {
-            model.addAttribute("task", task);
-            return "tasks/one";
-        } else {
+        if (task == null) {
             model.addAttribute("message", "Not found task by ID: " + id);
             return "errors/404";
         }
-
+        model.addAttribute("task", task);
+        return "tasks/one";
     }
 
     @GetMapping("edit/{id}")
     public String edit(Model model, @PathVariable int id) {
         Task task = taskService.findById(id);
-        if (task != null) {
-            model.addAttribute("task", task);
-            return "tasks/edit";
-        } else  {
+        if (task == null) {
             model.addAttribute("message", "Not found task by ID: " + id);
             return "errors/404";
         }
+        model.addAttribute("task", task);
+        return "tasks/edit";
     }
 
     @GetMapping("delete/{id}")
     public String delete(Model model, @PathVariable int id) {
-        if (taskService.delete(id)) {
-            return "redirect:/tasks";
-        } else  {
+        if (!taskService.delete(id)) {
             model.addAttribute("message", "Error when delete Task for id: " + id);
             return "errors/404";
         }
+        return "redirect:/tasks";
     }
 
 }
