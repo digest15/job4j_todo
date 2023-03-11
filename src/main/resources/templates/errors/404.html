@@ -21,10 +21,13 @@
                     <a class="nav-item nav-link" href="/">Главная</a>
                     <a class="nav-item nav-link active" th:href="@{/tasks}">Список задач</a>
                 </div>
-                <div class="navbar-nav me-auto">
-                    <a class="nav-item nav-link active" href="/tasks">Все</a>
-                    <a class="nav-item nav-link" th:href="@{/tasks/done}">Выполненные</a>
-                    <a class="nav-item nav-link" th:href="@{/tasks/new}">Новые</a>
+                <div class="d-flex" th:if="${user == null}">
+                    <a class="nav-link text-secondary me-3" th:href="@{/users/register}">Регистрация</a>
+                    <a class="nav-link text-secondary" th:href="@{/users/login}">Войти</a>
+                </div>
+                <div class="d-flex" th:if="${user != null}">
+                    <a class="nav-link text-secondary me-3" href="#" th:text="${user.name}"></a>
+                    <a class="nav-link text-secondary" th:href="@{/users/logout}">Выйти</a>
                 </div>
             </div>
         </div>
