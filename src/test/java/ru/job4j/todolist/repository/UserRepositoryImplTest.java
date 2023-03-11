@@ -26,7 +26,8 @@ class UserRepositoryImplTest {
         final StandardServiceRegistry registry = new StandardServiceRegistryBuilder()
                 .configure().build();
         sessionFactory = new MetadataSources(registry).buildMetadata().buildSessionFactory();
-        userRepository = new UserRepositoryImpl(sessionFactory);
+        CrudRepository crudRepository = new CrudRepository(sessionFactory);
+        userRepository = new UserRepositoryImpl(crudRepository);
     }
 
     @AfterAll

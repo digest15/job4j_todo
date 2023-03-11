@@ -1,129 +1,57 @@
 package ru.job4j.todolist.repository;
 
-import lombok.extern.slf4j.Slf4j;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Repository;
 import ru.job4j.todolist.model.User;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
-@Slf4j
+@AllArgsConstructor
 public class UserRepositoryImpl implements UserRepository {
 
-    private final SessionFactory sf;
-
-    public UserRepositoryImpl(SessionFactory sf) {
-        this.sf = sf;
-    }
+    private final CrudRepository crudRepository;
 
     @Override
     public User add(User user) {
-        User result = null;
-
-        var session = sf.openSession();
-        try {
-            session.beginTransaction();
+        return crudRepository.tx(session -> {
             session.save(user);
-            session.getTransaction().commit();
-
-            result = user;
-        } catch (Exception e) {
-            session.getTransaction().rollback();
-            log.error("Something was wrong", e);
-        } finally {
-            session.close();
-        }
-
-        return result;
+            return user;
+        });
     }
 
     @Override
     public Optional<User> findByLoginAndPassword(String login, String password) {
-        Optional<User> user = Optional.empty();
-
-        Session session = sf.openSession();
-        try {
-            session.beginTransaction();
-            user = session.createQuery("from User where login = :login and password = :password", User.class)
-                    .setParameter("login", login)
-                    .setParameter("password", password)
-                    .uniqueResultOptional();
-            session.getTransaction().commit();
-        } catch (Exception e) {
-            session.getTransaction().rollback();
-            log.error("Something was wrong", e);
-        } finally {
-            session.close();
-        }
-
-        return user;
+        return crudRepository.optional(
+                "from User where login = :login and password = :password",
+                User.class,
+                Map.of("login", login, "password", password));
     }
 
     @Override
     public Optional<User> findById(int id) {
-        Optional<User> user = Optional.empty();
-
-        Session session = sf.openSession();
-        try {
-            session.beginTransaction();
-            user = session.createQuery("from User where id = :id", User.class)
-                    .setParameter("id", id)
-                    .uniqueResultOptional();
-            session.getTransaction().commit();
-        } catch (Exception e) {
-            session.getTransaction().rollback();
-            log.error("Something was wrong", e);
-        } finally {
-            session.close();
-        }
-
-        return user;
+        return crudRepository.optional(
+                "from User where id = :id",
+                User.class,
+                Map.of("id", id)
+        );
     }
 
     @Override
     public Collection<User> findAll() {
-        List<User> users = List.of();
-
-        Session session = sf.openSession();
-        try {
-            session.beginTransaction();
-            users = session.createQuery("from User", User.class)
-                    .getResultList();
-            session.getTransaction().commit();
-        } catch (Exception e) {
-            session.getTransaction().rollback();
-            log.error("Something was wrong", e);
-        } finally {
-            session.close();
-        }
-
-        return users;
+        return crudRepository.query(
+                "from User",
+                User.class
+        );
     }
 
     @Override
     public boolean delete(int id) {
-        var result = false;
-
-        var session = sf.openSession();
-        try {
-            session.beginTransaction();
-            var count = session.createQuery("DELETE User WHERE id = :id")
-                    .setParameter("id", id)
-                    .executeUpdate();
-            session.getTransaction().commit();
-
-            result = count > 0;
-        } catch (Exception e) {
-            session.getTransaction().rollback();
-            log.error("Something was wrong", e);
-        } finally {
-            session.close();
-        }
-
-        return result;
+        return crudRepository.run(
+                "DELETE User WHERE id = :id",
+                Map.of("id", id)
+        );
     }
 }
