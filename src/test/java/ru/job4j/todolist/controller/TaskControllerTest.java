@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.ui.ConcurrentModel;
 import ru.job4j.todolist.model.Task;
+import ru.job4j.todolist.model.User;
 import ru.job4j.todolist.service.TaskService;
 
 import java.time.LocalDateTime;
@@ -27,8 +28,8 @@ class TaskControllerTest {
 
     @Test
     public void whenRequestAllTaskList() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false);
-        var task2 = new Task(1, "Task2", LocalDateTime.now(), false);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null);
+        var task2 = new Task(1, "Task2", LocalDateTime.now(), false, null);
         var expectedTasks = List.of(task1, task2);
         when(taskService.findAll()).thenReturn(expectedTasks);
 
@@ -42,8 +43,8 @@ class TaskControllerTest {
 
     @Test
     public void whenRequestDoneTaskList() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), true);
-        var task2 = new Task(1, "Task2", LocalDateTime.now(), true);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), true, null);
+        var task2 = new Task(1, "Task2", LocalDateTime.now(), true, null);
         var expectedTasks = List.of(task1, task2);
         when(taskService.findAll(true)).thenReturn(expectedTasks);
 
@@ -57,8 +58,8 @@ class TaskControllerTest {
 
     @Test
     public void whenRequestNewTaskList() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false);
-        var task2 = new Task(1, "Task2", LocalDateTime.now(), false);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null);
+        var task2 = new Task(1, "Task2", LocalDateTime.now(), false, null);
         var expectedTasks = List.of(task1, task2);
         when(taskService.findAll(false)).thenReturn(expectedTasks);
 
@@ -78,7 +79,7 @@ class TaskControllerTest {
 
     @Test
     public void whenPostTask() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null);
         var taskArgCaptor = ArgumentCaptor.forClass(Task.class);
         when(taskService.add(taskArgCaptor.capture())).thenReturn(task1);
 
@@ -92,7 +93,7 @@ class TaskControllerTest {
 
     @Test
     public void whenPostTaskAndNotSaveThenRedirectErrorPage() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null);
         when(taskService.add(any(Task.class))).thenReturn(null);
 
         var model = new ConcurrentModel();
@@ -105,7 +106,7 @@ class TaskControllerTest {
 
     @Test
     public void whenDoneTask() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null);
         var taskArgCaptor = ArgumentCaptor.forClass(Task.class);
         var doneFlagCaptor = ArgumentCaptor.forClass(Boolean.class);
         when(taskService.doneTask(taskArgCaptor.capture(), doneFlagCaptor.capture())).thenReturn(true);
@@ -125,7 +126,7 @@ class TaskControllerTest {
 
     @Test
     public void whenDoneTaskAndNotUpdated() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null);
         var taskArgCaptor = ArgumentCaptor.forClass(Task.class);
         var doneFlagCaptor = ArgumentCaptor.forClass(Boolean.class);
         when(taskService.doneTask(taskArgCaptor.capture(), doneFlagCaptor.capture())).thenReturn(false);
@@ -145,7 +146,7 @@ class TaskControllerTest {
 
     @Test
     public void whenUpdateTask() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null);
         var taskArgCaptor = ArgumentCaptor.forClass(Task.class);
         when(taskService.update(taskArgCaptor.capture())).thenReturn(true);
 
@@ -161,7 +162,7 @@ class TaskControllerTest {
 
     @Test
     public void whenUpdateTaskAndNotUpdated() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null);
         var taskArgCaptor = ArgumentCaptor.forClass(Task.class);
         when(taskService.update(taskArgCaptor.capture())).thenReturn(false);
 
@@ -177,7 +178,7 @@ class TaskControllerTest {
 
     @Test
     public void whenRequestTaskById() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null);
         when(taskService.findById(any(Integer.class))).thenReturn(task1);
 
         var model = new ConcurrentModel();
@@ -203,7 +204,7 @@ class TaskControllerTest {
 
     @Test
     public void whenRequestEditPage() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null);
         when(taskService.findById(any(Integer.class))).thenReturn(task1);
 
         var model = new ConcurrentModel();
@@ -216,7 +217,7 @@ class TaskControllerTest {
 
     @Test
     public void whenRequestEditPageEndTaskNotFound() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null);
         when(taskService.findById(any(Integer.class))).thenReturn(null);
 
         var model = new ConcurrentModel();
@@ -229,7 +230,7 @@ class TaskControllerTest {
 
     @Test
     public void whenDeleteTask() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null);
         var idCaptor = ArgumentCaptor.forClass(Integer.class);
         when(taskService.delete(idCaptor.capture())).thenReturn(true);
 
@@ -243,7 +244,7 @@ class TaskControllerTest {
 
     @Test
     public void whenDeleteTaskAndNotDeleted() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null);
         var idCaptor = ArgumentCaptor.forClass(Integer.class);
         when(taskService.delete(idCaptor.capture())).thenReturn(false);
 

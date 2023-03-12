@@ -9,6 +9,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import ru.job4j.todolist.model.Task;
+import ru.job4j.todolist.model.User;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -25,6 +26,8 @@ class TaskRepositoryImplTest {
 
     private static TaskRepository taskRepository;
 
+    private static UserRepository userRepository;
+
     private static SessionFactory sessionFactory;
 
     @BeforeAll
@@ -34,6 +37,7 @@ class TaskRepositoryImplTest {
         sessionFactory = new MetadataSources(registry).buildMetadata().buildSessionFactory();
         CrudRepository crudRepository = new CrudRepository(sessionFactory);
         taskRepository = new TaskRepositoryImpl(crudRepository);
+        userRepository = new UserRepositoryImpl(crudRepository);
     }
 
     @AfterAll
@@ -45,28 +49,34 @@ class TaskRepositoryImplTest {
     public void clearRepository() {
         taskRepository.findAll()
                 .forEach(task -> taskRepository.delete(task.getId()));
+        userRepository.findAll()
+                .forEach(user -> userRepository.delete(user.getId()));
     }
 
     @Test
     public void whenSaveThenGetSame() {
+        var user = userRepository.add(new User(0, "admin", "admin", "123"));
         var task = Task.builder()
                 .done(false)
                 .created(LocalDateTime.now())
                 .description("task")
+                .user(user)
                 .build();
         taskRepository.add(task);
         Optional<Task> findTask = taskRepository.findById(task.getId());
 
         assertThat(findTask.isPresent()).isTrue();
         assertThat(task).isEqualTo(findTask.get());
+        assertThat(findTask.get().getUser()).isEqualTo(user);
     }
 
     @Test
     public void whenSaveSeveralThenGetAll() {
+        var user = userRepository.add(new User(0, "admin", "admin", "123"));
         var creationDate = now().truncatedTo(ChronoUnit.MINUTES);
-        var task1 = taskRepository.add(Task.builder().created(creationDate).description("task1").build());
-        var task2 = taskRepository.add(Task.builder().created(creationDate).description("task2").build());
-        var task3 = taskRepository.add(Task.builder().created(creationDate).description("task3").build());
+        var task1 = taskRepository.add(Task.builder().created(creationDate).description("task1").user(user).build());
+        var task2 = taskRepository.add(Task.builder().created(creationDate).description("task2").user(user).build());
+        var task3 = taskRepository.add(Task.builder().created(creationDate).description("task3").user(user).build());
         var result = taskRepository.findAll();
 
         assertThat(task1).isNotNull();
@@ -83,30 +93,39 @@ class TaskRepositoryImplTest {
 
     @Test
     public void whenDeleteThenGetEmptyOptional() {
+        var user = userRepository.add(new User(0, "admin", "admin", "123"));
         var creationDate = now().truncatedTo(ChronoUnit.MINUTES);
-        var task = taskRepository.add(Task.builder().created(creationDate).description("Task").build());
+        var task = taskRepository.add(Task.builder().created(creationDate).description("Task").user(user).build());
         assertThat(task).isNotNull();
 
         taskRepository.delete(task.getId());
         Optional<Task> foundTask = taskRepository.findById(task.getId());
         assertThat(foundTask).isEqualTo(Optional.empty());
+
+        var foundUser = userRepository.findById(user.getId());
+        assertThat(foundUser).isPresent();
+        assertThat(foundUser.get()).isEqualTo(user);
     }
 
     @Test
     public void whenUpdateThenGetUpdated() {
+        var user1 = userRepository.add(new User(0, "admin", "admin", "123"));
+        var user2 = userRepository.add(new User(0, "admin1", "admin1", "123"));
         var creationDate = now().truncatedTo(ChronoUnit.MINUTES);
-        var task = taskRepository.add(Task.builder().created(creationDate).description("Task").build());
+        var task = taskRepository.add(Task.builder().created(creationDate).description("Task").user(user1).build());
         var updateTask = Task.builder()
                 .id(task.getId())
                 .created(creationDate.plusDays(1))
                 .description("new Task")
                 .done(true)
+                .user(user2)
                 .build();
         taskRepository.update(updateTask);
         var savedTask = taskRepository.findById(task.getId());
 
         assertThat(savedTask).isPresent();
         assertThat(savedTask.get()).isEqualTo(updateTask);
+        assertThat(savedTask.get().getUser()).isEqualTo(user2);
     }
 
     @Test

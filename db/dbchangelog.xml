@@ -8,5 +8,6 @@
 
     <include file="scripts/001_ddl_create_tasks.sql" relativeToChangelogFile="true"/>
     <include file="scripts/002_ddl_create_users.sql" relativeToChangelogFile="true"/>
+    <include file="scripts/003_ddl_update_tasks.sql" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

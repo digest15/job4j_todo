@@ -18,8 +18,16 @@ public class Task {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
     private int id;
+
     private String description;
+
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime created = LocalDateTime.now();
+
     private boolean done;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
 }
