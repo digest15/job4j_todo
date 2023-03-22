@@ -1,20 +1,26 @@
 package ru.job4j.todolist.controller;
 
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import ru.job4j.todolist.model.Priority;
 import ru.job4j.todolist.model.Task;
+import ru.job4j.todolist.model.User;
+import ru.job4j.todolist.service.PriorityService;
 import ru.job4j.todolist.service.TaskService;
+
+import javax.servlet.http.HttpSession;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/tasks")
+@AllArgsConstructor
 public class TaskController {
 
     private final TaskService taskService;
 
-    public TaskController(TaskService taskService) {
-        this.taskService = taskService;
-    }
+    private final PriorityService priorityService;
 
     @GetMapping
     public String getAll(Model model) {
@@ -35,12 +41,21 @@ public class TaskController {
     }
 
     @GetMapping("/create")
-    public String getCreationPage() {
+    public String getCreationPage(Model model) {
+        model.addAttribute("priorities", priorityService.findAll());
         return "tasks/create";
     }
 
     @PostMapping("/create")
-    public String create(@ModelAttribute Task task, Model model) {
+    public String create(@ModelAttribute Task task, @RequestParam int priorityId, Model model, HttpSession session) {
+        Optional<Priority> priority = priorityService.findById(priorityId);
+        if (priority.isEmpty()) {
+            model.addAttribute("message", "Not found priority by id: " + priorityId);
+            return "errors/404";
+        }
+
+        task.setUser((User) session.getAttribute("user"));
+        task.setPriority(priority.get());
         Task newTask = taskService.add(task);
 
         if (newTask == null) {
@@ -88,6 +103,7 @@ public class TaskController {
             model.addAttribute("message", "Not found task by ID: " + id);
             return "errors/404";
         }
+        model.addAttribute("priorities", priorityService.findAll());
         model.addAttribute("task", task);
         return "tasks/edit";
     }

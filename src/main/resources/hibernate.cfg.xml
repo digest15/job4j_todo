@@ -15,5 +15,6 @@
 
         <mapping class="ru.job4j.todolist.model.Task" />
         <mapping class="ru.job4j.todolist.model.User" />
+        <mapping class="ru.job4j.todolist.model.Priority" />
     </session-factory>
 </hibernate-configuration>

@@ -3,13 +3,16 @@ package ru.job4j.todolist.controller;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.ui.ConcurrentModel;
+import ru.job4j.todolist.model.Priority;
 import ru.job4j.todolist.model.Task;
-import ru.job4j.todolist.model.User;
+import ru.job4j.todolist.service.PriorityService;
 import ru.job4j.todolist.service.TaskService;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -18,18 +21,21 @@ class TaskControllerTest {
 
     private TaskService taskService;
 
+    private PriorityService priorityService;
+
     private TaskController taskController;
 
     @BeforeEach
     public void initService() {
         taskService = mock(TaskService.class);
-        taskController = new TaskController(taskService);
+        priorityService = mock(PriorityService.class);
+        taskController = new TaskController(taskService, priorityService);
     }
 
     @Test
     public void whenRequestAllTaskList() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null);
-        var task2 = new Task(1, "Task2", LocalDateTime.now(), false, null);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null, null);
+        var task2 = new Task(1, "Task2", LocalDateTime.now(), false, null, null);
         var expectedTasks = List.of(task1, task2);
         when(taskService.findAll()).thenReturn(expectedTasks);
 
@@ -43,8 +49,8 @@ class TaskControllerTest {
 
     @Test
     public void whenRequestDoneTaskList() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), true, null);
-        var task2 = new Task(1, "Task2", LocalDateTime.now(), true, null);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), true, null, null);
+        var task2 = new Task(1, "Task2", LocalDateTime.now(), true, null, null);
         var expectedTasks = List.of(task1, task2);
         when(taskService.findAll(true)).thenReturn(expectedTasks);
 
@@ -58,8 +64,8 @@ class TaskControllerTest {
 
     @Test
     public void whenRequestNewTaskList() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null);
-        var task2 = new Task(1, "Task2", LocalDateTime.now(), false, null);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null, null);
+        var task2 = new Task(1, "Task2", LocalDateTime.now(), false, null, null);
         var expectedTasks = List.of(task1, task2);
         when(taskService.findAll(false)).thenReturn(expectedTasks);
 
@@ -73,31 +79,48 @@ class TaskControllerTest {
 
     @Test
     public void whenGetCreationPage() {
-        var view = taskController.getCreationPage();
+        var high = new Priority(0, "High", 1);
+        var low = new Priority(0, "low", 2);
+        when(priorityService.findAll()).thenReturn(List.of(high, low));
+
+        var model = new ConcurrentModel();
+        var view = taskController.getCreationPage(model);
+        var priorities = model.getAttribute("priorities");
+
         assertThat(view).isEqualTo("tasks/create");
+        assertThat(priorities).isEqualTo(List.of(high, low));
     }
 
     @Test
     public void whenPostTask() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null, null);
         var taskArgCaptor = ArgumentCaptor.forClass(Task.class);
         when(taskService.add(taskArgCaptor.capture())).thenReturn(task1);
 
+        var priority = new Priority(0, "high", 1);
+        when(priorityService.findById(any(Integer.class))).thenReturn(Optional.of(priority));
+
         var model = new ConcurrentModel();
-        var view = taskController.create(task1, model);
+        var httpSession = new MockHttpSession();
+        var view = taskController.create(task1, 0, model, httpSession);
         var actualTask = taskArgCaptor.getValue();
 
         assertThat(view).isEqualTo("redirect:/tasks");
         assertThat(actualTask).isEqualTo(task1);
+        assertThat(actualTask.getPriority()).isEqualTo(priority);
     }
 
     @Test
     public void whenPostTaskAndNotSaveThenRedirectErrorPage() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null, null);
         when(taskService.add(any(Task.class))).thenReturn(null);
 
+        var priority = new Priority(0, "high", 1);
+        when(priorityService.findById(any(Integer.class))).thenReturn(Optional.of(priority));
+
         var model = new ConcurrentModel();
-        var view = taskController.create(task1, model);
+        var httpSession = new MockHttpSession();
+        var view = taskController.create(task1, priority.getId(), model, httpSession);
         var errorMessage = model.getAttribute("message");
 
         assertThat(view).isEqualTo("errors/404");
@@ -105,8 +128,24 @@ class TaskControllerTest {
     }
 
     @Test
+    public void whenPostTaskAndNotFoundPriority() {
+        var priorityId = 0;
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null, null);
+        when(taskService.add(any(Task.class))).thenReturn(null);
+        when(priorityService.findById(any(Integer.class))).thenReturn(Optional.empty());
+
+        var model = new ConcurrentModel();
+        var httpSession = new MockHttpSession();
+        var view = taskController.create(task1, priorityId, model, httpSession);
+        var errorMessage = model.getAttribute("message");
+
+        assertThat(view).isEqualTo("errors/404");
+        assertThat(errorMessage).isEqualTo("Not found priority by id: " + priorityId);
+    }
+
+    @Test
     public void whenDoneTask() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null, null);
         var taskArgCaptor = ArgumentCaptor.forClass(Task.class);
         var doneFlagCaptor = ArgumentCaptor.forClass(Boolean.class);
         when(taskService.doneTask(taskArgCaptor.capture(), doneFlagCaptor.capture())).thenReturn(true);
@@ -126,7 +165,7 @@ class TaskControllerTest {
 
     @Test
     public void whenDoneTaskAndNotUpdated() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null, null);
         var taskArgCaptor = ArgumentCaptor.forClass(Task.class);
         var doneFlagCaptor = ArgumentCaptor.forClass(Boolean.class);
         when(taskService.doneTask(taskArgCaptor.capture(), doneFlagCaptor.capture())).thenReturn(false);
@@ -146,7 +185,7 @@ class TaskControllerTest {
 
     @Test
     public void whenUpdateTask() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null, null);
         var taskArgCaptor = ArgumentCaptor.forClass(Task.class);
         when(taskService.update(taskArgCaptor.capture())).thenReturn(true);
 
@@ -162,7 +201,7 @@ class TaskControllerTest {
 
     @Test
     public void whenUpdateTaskAndNotUpdated() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null, null);
         var taskArgCaptor = ArgumentCaptor.forClass(Task.class);
         when(taskService.update(taskArgCaptor.capture())).thenReturn(false);
 
@@ -178,7 +217,7 @@ class TaskControllerTest {
 
     @Test
     public void whenRequestTaskById() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null, null);
         when(taskService.findById(any(Integer.class))).thenReturn(task1);
 
         var model = new ConcurrentModel();
@@ -204,20 +243,25 @@ class TaskControllerTest {
 
     @Test
     public void whenRequestEditPage() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null, null);
         when(taskService.findById(any(Integer.class))).thenReturn(task1);
+
+        var priority = new Priority(0, "high", 1);
+        when(priorityService.findAll()).thenReturn(List.of(priority));
 
         var model = new ConcurrentModel();
         var view = taskController.edit(model, task1.getId());
         var actualTask = model.getAttribute("task");
+        var priorities = model.getAttribute("priorities");
 
         assertThat(view).isEqualTo("tasks/edit");
         assertThat(actualTask).isEqualTo(task1);
+        assertThat(priorities).isEqualTo(List.of(priority));
     }
 
     @Test
     public void whenRequestEditPageEndTaskNotFound() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null, null);
         when(taskService.findById(any(Integer.class))).thenReturn(null);
 
         var model = new ConcurrentModel();
@@ -230,7 +274,7 @@ class TaskControllerTest {
 
     @Test
     public void whenDeleteTask() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null, null);
         var idCaptor = ArgumentCaptor.forClass(Integer.class);
         when(taskService.delete(idCaptor.capture())).thenReturn(true);
 
@@ -244,7 +288,7 @@ class TaskControllerTest {
 
     @Test
     public void whenDeleteTaskAndNotDeleted() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null, null);
         var idCaptor = ArgumentCaptor.forClass(Integer.class);
         when(taskService.delete(idCaptor.capture())).thenReturn(false);
 

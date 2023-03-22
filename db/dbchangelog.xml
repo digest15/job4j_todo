@@ -9,5 +9,9 @@
     <include file="scripts/001_ddl_create_tasks.sql" relativeToChangelogFile="true"/>
     <include file="scripts/002_ddl_create_users.sql" relativeToChangelogFile="true"/>
     <include file="scripts/003_ddl_update_tasks.sql" relativeToChangelogFile="true"/>
+    <include file="scripts/004_ddl_create_priorities.sql" relativeToChangelogFile="true"/>
+    <include file="scripts/006_dml_insert_priorities.sql" relativeToChangelogFile="true"/>
+    <include file="scripts/007_ddl_update_tasks.sql" relativeToChangelogFile="true"/>
+    <include file="scripts/008_dml_update_tasks.sql" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

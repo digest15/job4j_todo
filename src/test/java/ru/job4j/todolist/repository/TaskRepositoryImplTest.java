@@ -8,6 +8,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import ru.job4j.todolist.model.Priority;
 import ru.job4j.todolist.model.Task;
 import ru.job4j.todolist.model.User;
 
@@ -28,6 +29,8 @@ class TaskRepositoryImplTest {
 
     private static UserRepository userRepository;
 
+    private static PriorityRepository priorityRepository;
+
     private static SessionFactory sessionFactory;
 
     @BeforeAll
@@ -38,6 +41,7 @@ class TaskRepositoryImplTest {
         CrudRepository crudRepository = new CrudRepository(sessionFactory);
         taskRepository = new TaskRepositoryImpl(crudRepository);
         userRepository = new UserRepositoryImpl(crudRepository);
+        priorityRepository = new PriorityRepositoryImpl(crudRepository);
     }
 
     @AfterAll
@@ -51,16 +55,20 @@ class TaskRepositoryImplTest {
                 .forEach(task -> taskRepository.delete(task.getId()));
         userRepository.findAll()
                 .forEach(user -> userRepository.delete(user.getId()));
+        priorityRepository.findAll()
+                .forEach(priority -> priorityRepository.delete(priority));
     }
 
     @Test
     public void whenSaveThenGetSame() {
         var user = userRepository.add(new User(0, "admin", "admin", "123"));
+        var priority = priorityRepository.add(new Priority(0, "high", 1));
         var task = Task.builder()
                 .done(false)
                 .created(LocalDateTime.now())
                 .description("task")
                 .user(user)
+                .priority(priority)
                 .build();
         taskRepository.add(task);
         Optional<Task> findTask = taskRepository.findById(task.getId());
@@ -68,21 +76,42 @@ class TaskRepositoryImplTest {
         assertThat(findTask.isPresent()).isTrue();
         assertThat(task).isEqualTo(findTask.get());
         assertThat(findTask.get().getUser()).isEqualTo(user);
+        assertThat(findTask.get().getPriority()).isEqualTo(priority);
     }
 
     @Test
     public void whenSaveSeveralThenGetAll() {
         var user = userRepository.add(new User(0, "admin", "admin", "123"));
+        var priority = priorityRepository.add(new Priority(0, "high", 1));
         var creationDate = now().truncatedTo(ChronoUnit.MINUTES);
-        var task1 = taskRepository.add(Task.builder().created(creationDate).description("task1").user(user).build());
-        var task2 = taskRepository.add(Task.builder().created(creationDate).description("task2").user(user).build());
-        var task3 = taskRepository.add(Task.builder().created(creationDate).description("task3").user(user).build());
+        var task1 = taskRepository.add(Task.builder()
+                .created(creationDate)
+                .description("task1")
+                .user(user)
+                .priority(priority)
+                .build()
+        );
+        var task2 = taskRepository.add(Task.builder()
+                .created(creationDate)
+                .description("task2")
+                .user(user)
+                .priority(priority)
+                .build()
+        );
+        var task3 = taskRepository.add(Task.builder()
+                .created(creationDate)
+                .description("task3")
+                .user(user)
+                .priority(priority)
+                .build()
+        );
         var result = taskRepository.findAll();
 
         assertThat(task1).isNotNull();
         assertThat(task2).isNotNull();
         assertThat(task3).isNotNull();
         assertThat(result).isEqualTo(List.of(task1, task2, task3));
+        assertThat(result.get(0).getPriority()).isEqualTo(priority);
     }
 
     @Test
@@ -95,7 +124,14 @@ class TaskRepositoryImplTest {
     public void whenDeleteThenGetEmptyOptional() {
         var user = userRepository.add(new User(0, "admin", "admin", "123"));
         var creationDate = now().truncatedTo(ChronoUnit.MINUTES);
-        var task = taskRepository.add(Task.builder().created(creationDate).description("Task").user(user).build());
+        var priority = priorityRepository.add(new Priority(0, "high", 1));
+        var task = taskRepository.add(Task.builder()
+                .created(creationDate)
+                .description("Task")
+                .user(user)
+                .priority(priority)
+                .build()
+        );
         assertThat(task).isNotNull();
 
         taskRepository.delete(task.getId());
@@ -105,6 +141,10 @@ class TaskRepositoryImplTest {
         var foundUser = userRepository.findById(user.getId());
         assertThat(foundUser).isPresent();
         assertThat(foundUser.get()).isEqualTo(user);
+
+        var foundPriority = priorityRepository.findById(priority.getId());
+        assertThat(foundPriority).isPresent();
+        assertThat(foundPriority.get()).isEqualTo(priority);
     }
 
     @Test
@@ -112,13 +152,21 @@ class TaskRepositoryImplTest {
         var user1 = userRepository.add(new User(0, "admin", "admin", "123"));
         var user2 = userRepository.add(new User(0, "admin1", "admin1", "123"));
         var creationDate = now().truncatedTo(ChronoUnit.MINUTES);
-        var task = taskRepository.add(Task.builder().created(creationDate).description("Task").user(user1).build());
+        var priority = priorityRepository.add(new Priority(0, "high", 1));
+        var task = taskRepository.add(Task.builder()
+                .created(creationDate)
+                .description("Task")
+                .user(user1)
+                .priority(priority)
+                .build()
+        );
         var updateTask = Task.builder()
                 .id(task.getId())
                 .created(creationDate.plusDays(1))
                 .description("new Task")
                 .done(true)
                 .user(user2)
+                .priority(priority)
                 .build();
         taskRepository.update(updateTask);
         var savedTask = taskRepository.findById(task.getId());
@@ -126,30 +174,53 @@ class TaskRepositoryImplTest {
         assertThat(savedTask).isPresent();
         assertThat(savedTask.get()).isEqualTo(updateTask);
         assertThat(savedTask.get().getUser()).isEqualTo(user2);
+        assertThat(savedTask.get().getPriority()).isEqualTo(priority);
     }
 
     @Test
     public void whenUpdateByDone() {
         var creationDate = now().truncatedTo(ChronoUnit.MINUTES);
-        var task = taskRepository.add(Task.builder().created(creationDate).description("Task").done(false).build());
+        var priority = priorityRepository.add(new Priority(0, "high", 1));
+        var task = taskRepository.add(Task.builder()
+                .created(creationDate)
+                .description("Task")
+                .done(false)
+                .priority(priority)
+                .build()
+        );
 
         var isDone = true;
         taskRepository.updateByDone(task.getId(), isDone);
         var actualTask = taskRepository.findById(task.getId());
-
+        assertThat(actualTask).isPresent();
         assertThat(actualTask.get().isDone()).isEqualTo(isDone);
     }
 
     @Test
     public void whenFindTaskByDone() {
         var creationDate = now().truncatedTo(ChronoUnit.MINUTES);
-        var task1 = taskRepository.add(Task.builder().created(creationDate).description("Task1").done(true).build());
-        var task2 = taskRepository.add(Task.builder().created(creationDate).description("Task2").done(false).build());
+        var priority = priorityRepository.add(new Priority(0, "high", 1));
+        var task1 = taskRepository.add(Task.builder()
+                .created(creationDate)
+                .description("Task1")
+                .done(true)
+                .priority(priority)
+                .build()
+        );
+        var task2 = taskRepository.add(Task.builder()
+                .created(creationDate)
+                .description("Task2")
+                .done(false)
+                .priority(priority)
+                .build()
+        );
 
         List<Task> newTask = taskRepository.findByDone(true);
         assertThat(newTask).isEqualTo(List.of(task1));
+        assertThat(newTask.get(0).getPriority()).isEqualTo(priority);
 
         List<Task> doneTask = taskRepository.findByDone(false);
         assertThat(doneTask).isEqualTo(List.of(task2));
+        assertThat(doneTask.get(0).getPriority()).isEqualTo(priority);
     }
 }

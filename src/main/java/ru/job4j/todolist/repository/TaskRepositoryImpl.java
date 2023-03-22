@@ -24,7 +24,7 @@ public class TaskRepositoryImpl implements TaskRepository {
 
     @Override
     public boolean update(Task task) {
-        return crudRepository.tx(session -> {
+        return crudRepository.run(session -> {
             session.update(task);
             return true;
         });
@@ -34,7 +34,7 @@ public class TaskRepositoryImpl implements TaskRepository {
     public boolean updateByDone(int id, boolean isDone) {
         return crudRepository.tx(session -> {
             var result = false;
-            Task task = session.createQuery("from Task WHERE id = :id", Task.class)
+            Task task = session.createQuery("from Task t where t.id = :id", Task.class)
                     .setParameter("id", id)
                     .uniqueResult();
             if (task != null) {
@@ -55,13 +55,13 @@ public class TaskRepositoryImpl implements TaskRepository {
 
     @Override
     public List<Task> findAll() {
-        return crudRepository.query("from Task", Task.class);
+        return crudRepository.query("from Task t join fetch t.priority", Task.class);
     }
 
     @Override
     public Optional<Task> findById(int id) {
         return crudRepository.optional(
-                "from Task WHERE id = :id",
+                "from Task t join fetch t.priority WHERE t.id = :id",
                 Task.class,
                 Map.of("id", id));
     }
@@ -69,7 +69,7 @@ public class TaskRepositoryImpl implements TaskRepository {
     @Override
     public List<Task> findLikeDescription(String key) {
         return crudRepository.query(
-                "from Task like description = :des",
+                "from Task t join fetch t.priority like t.description = :des",
                 Task.class,
                 Map.of("des", key)
         );
@@ -78,7 +78,7 @@ public class TaskRepositoryImpl implements TaskRepository {
     @Override
     public List<Task> findByDone(boolean isDone) {
         return crudRepository.query(
-                "from Task where done = :isDone",
+                "from Task t join fetch t.priority where t.done = :isDone",
                 Task.class,
                 Map.of("isDone", isDone)
         );

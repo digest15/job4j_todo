@@ -36,6 +36,10 @@
                 <input class="form-control w-25" type="datetime-local" id="created" name="created" th:field="*{created}" readonly>
             </div>
             <div class="mb-3">
+                <label for="priority" class="form-label"><b>Приоритет</b></label>
+                <input class="form-control w-25" id="priority" name="created" th:field="*{priority.name}" readonly>
+            </div>
+            <div class="mb-3">
                 <label for="description" class="form-label"><b>Описание</b></label>
                 <textarea class="form-control" id="description" name="description" rows="25" placeholder="Что сделать?" th:field="*{description}" readonly></textarea>
             </div>
