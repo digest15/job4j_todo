@@ -1,0 +1,1 @@
+ALTER TABLE tasks ADD CONSTRAINT tasks_users FOREIGN KEY (user_id) REFERENCES users(id);
