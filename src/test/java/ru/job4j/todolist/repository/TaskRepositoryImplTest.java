@@ -42,6 +42,9 @@ class TaskRepositoryImplTest {
         taskRepository = new TaskRepositoryImpl(crudRepository);
         userRepository = new UserRepositoryImpl(crudRepository);
         priorityRepository = new PriorityRepositoryImpl(crudRepository);
+
+        priorityRepository.findAll()
+                .forEach(priority -> priorityRepository.delete(priority));
     }
 
     @AfterAll

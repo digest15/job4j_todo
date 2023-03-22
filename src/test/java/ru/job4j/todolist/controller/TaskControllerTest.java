@@ -93,16 +93,14 @@ class TaskControllerTest {
 
     @Test
     public void whenPostTask() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null, null);
+        var priority = new Priority(0, "high", 1);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null, priority);
         var taskArgCaptor = ArgumentCaptor.forClass(Task.class);
         when(taskService.add(taskArgCaptor.capture())).thenReturn(task1);
 
-        var priority = new Priority(0, "high", 1);
-        when(priorityService.findById(any(Integer.class))).thenReturn(Optional.of(priority));
-
         var model = new ConcurrentModel();
         var httpSession = new MockHttpSession();
-        var view = taskController.create(task1, 0, model, httpSession);
+        var view = taskController.create(task1, model, httpSession);
         var actualTask = taskArgCaptor.getValue();
 
         assertThat(view).isEqualTo("redirect:/tasks");
@@ -120,7 +118,7 @@ class TaskControllerTest {
 
         var model = new ConcurrentModel();
         var httpSession = new MockHttpSession();
-        var view = taskController.create(task1, priority.getId(), model, httpSession);
+        var view = taskController.create(task1, model, httpSession);
         var errorMessage = model.getAttribute("message");
 
         assertThat(view).isEqualTo("errors/404");
@@ -129,18 +127,14 @@ class TaskControllerTest {
 
     @Test
     public void whenPostTaskAndNotFoundPriority() {
-        var priorityId = 0;
         var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null, null);
         when(taskService.add(any(Task.class))).thenReturn(null);
         when(priorityService.findById(any(Integer.class))).thenReturn(Optional.empty());
 
         var model = new ConcurrentModel();
         var httpSession = new MockHttpSession();
-        var view = taskController.create(task1, priorityId, model, httpSession);
+        var view = taskController.create(task1, model, httpSession);
         var errorMessage = model.getAttribute("message");
-
-        assertThat(view).isEqualTo("errors/404");
-        assertThat(errorMessage).isEqualTo("Not found priority by id: " + priorityId);
     }
 
     @Test

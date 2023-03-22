@@ -4,14 +4,12 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import ru.job4j.todolist.model.Priority;
 import ru.job4j.todolist.model.Task;
 import ru.job4j.todolist.model.User;
 import ru.job4j.todolist.service.PriorityService;
 import ru.job4j.todolist.service.TaskService;
 
 import javax.servlet.http.HttpSession;
-import java.util.Optional;
 
 @Controller
 @RequestMapping("/tasks")
@@ -47,15 +45,8 @@ public class TaskController {
     }
 
     @PostMapping("/create")
-    public String create(@ModelAttribute Task task, @RequestParam int priorityId, Model model, HttpSession session) {
-        Optional<Priority> priority = priorityService.findById(priorityId);
-        if (priority.isEmpty()) {
-            model.addAttribute("message", "Not found priority by id: " + priorityId);
-            return "errors/404";
-        }
-
+    public String create(@ModelAttribute Task task, Model model, HttpSession session) {
         task.setUser((User) session.getAttribute("user"));
-        task.setPriority(priority.get());
         Task newTask = taskService.add(task);
 
         if (newTask == null) {
