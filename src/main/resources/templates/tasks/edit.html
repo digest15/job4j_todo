@@ -37,12 +37,13 @@
             </div>
             <div class="mb-3">
                 <label for="user" class="form-label"><b>Автор</b></label>
+                <input type="hidden" name="user.id" th:field="*{user.id}">
                 <input class="form-control w-25" id="user" name="user" th:field="*{user.name}" readonly>
             </div>
             <div class="mb-3">
                 <label for="priority"><b>Приоритет</b></label>
                 <select class="form-control" id="priority" name="priority.id">
-                    <option th:each="priority : ${priorities}" th:value="${priority.id}" th:text="${priority.name}" th:field="*{priority}" th:selected="${priority.id==priorityId}"></option>
+                    <option th:each="pr : ${priorities}" th:value="${pr.id}" th:text="${pr.name}" th:field="*{priority}" th:selected="${pr.id==task.priority.id}"></option>
                 </select>
             </div>
             <div class="mb-3">
