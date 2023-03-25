@@ -8,6 +8,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import ru.job4j.todolist.model.Category;
 import ru.job4j.todolist.model.Priority;
 import ru.job4j.todolist.model.Task;
 import ru.job4j.todolist.model.User;
@@ -31,6 +32,8 @@ class TaskRepositoryImplTest {
 
     private static PriorityRepository priorityRepository;
 
+    private static CategoryRepository categoryRepository;
+
     private static SessionFactory sessionFactory;
 
     @BeforeAll
@@ -42,9 +45,12 @@ class TaskRepositoryImplTest {
         taskRepository = new TaskRepositoryImpl(crudRepository);
         userRepository = new UserRepositoryImpl(crudRepository);
         priorityRepository = new PriorityRepositoryImpl(crudRepository);
+        categoryRepository = new CategoryRepositoryImpl(crudRepository);
 
         priorityRepository.findAll()
                 .forEach(priority -> priorityRepository.delete(priority));
+        categoryRepository.findAll()
+                .forEach(category -> categoryRepository.delete(category));
     }
 
     @AfterAll
@@ -57,29 +63,34 @@ class TaskRepositoryImplTest {
         taskRepository.findAll()
                 .forEach(task -> taskRepository.delete(task.getId()));
         userRepository.findAll()
-                .forEach(user -> userRepository.delete(user.getId()));
+                .forEach(user -> userRepository.delete(user));
         priorityRepository.findAll()
                 .forEach(priority -> priorityRepository.delete(priority));
+        categoryRepository.findAll()
+                .forEach(category -> categoryRepository.delete(category));
     }
 
     @Test
     public void whenSaveThenGetSame() {
         var user = userRepository.add(new User(0, "admin", "admin", "123"));
         var priority = priorityRepository.add(new Priority(0, "high", 1));
-        var task = Task.builder()
+        var category1 = categoryRepository.add(new Category(0, "Category1"));
+        var category2 = categoryRepository.add(new Category(0, "Category2"));
+        var task = taskRepository.add(Task.builder()
                 .done(false)
                 .created(LocalDateTime.now())
                 .description("task")
                 .user(user)
                 .priority(priority)
-                .build();
-        taskRepository.add(task);
+                .categories(List.of(category1, category2))
+                .build());
         Optional<Task> findTask = taskRepository.findById(task.getId());
 
         assertThat(findTask.isPresent()).isTrue();
         assertThat(task).isEqualTo(findTask.get());
         assertThat(findTask.get().getUser()).isEqualTo(user);
         assertThat(findTask.get().getPriority()).isEqualTo(priority);
+        assertThat(findTask.get().getCategories()).asList().contains(category1, category2);
     }
 
     @Test
@@ -87,11 +98,17 @@ class TaskRepositoryImplTest {
         var user = userRepository.add(new User(0, "admin", "admin", "123"));
         var priority = priorityRepository.add(new Priority(0, "high", 1));
         var creationDate = now().truncatedTo(ChronoUnit.MINUTES);
+
+        var category1 = categoryRepository.add(new Category(0, "Category1"));
+        var category2 = categoryRepository.add(new Category(0, "Category2"));
+        List<Category> category11 = List.of(category1, category2);
+
         var task1 = taskRepository.add(Task.builder()
                 .created(creationDate)
                 .description("task1")
                 .user(user)
                 .priority(priority)
+                .categories(category11)
                 .build()
         );
         var task2 = taskRepository.add(Task.builder()
@@ -99,6 +116,7 @@ class TaskRepositoryImplTest {
                 .description("task2")
                 .user(user)
                 .priority(priority)
+                .categories(category11)
                 .build()
         );
         var task3 = taskRepository.add(Task.builder()
@@ -106,6 +124,7 @@ class TaskRepositoryImplTest {
                 .description("task3")
                 .user(user)
                 .priority(priority)
+                .categories(category11)
                 .build()
         );
         var result = taskRepository.findAll();
@@ -115,6 +134,7 @@ class TaskRepositoryImplTest {
         assertThat(task3).isNotNull();
         assertThat(result).isEqualTo(List.of(task1, task2, task3));
         assertThat(result.get(0).getPriority()).isEqualTo(priority);
+        assertThat(result.get(0).getCategories()).asList().contains(category1, category2);
     }
 
     @Test

@@ -29,6 +29,9 @@ class PriorityRepositoryImplTest {
         sessionFactory = new MetadataSources(registry).buildMetadata().buildSessionFactory();
         CrudRepository crudRepository = new CrudRepository(sessionFactory);
         priorityRepository = new PriorityRepositoryImpl(crudRepository);
+
+        priorityRepository.findAll()
+                .forEach(priority -> priorityRepository.delete(priority));
     }
 
     @AfterAll

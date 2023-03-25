@@ -55,13 +55,13 @@ public class TaskRepositoryImpl implements TaskRepository {
 
     @Override
     public List<Task> findAll() {
-        return crudRepository.query("from Task t join fetch t.priority", Task.class);
+        return crudRepository.query("select distinct t from Task t join fetch t.priority left join fetch t.categories", Task.class);
     }
 
     @Override
     public Optional<Task> findById(int id) {
         return crudRepository.optional(
-                "from Task t join fetch t.priority WHERE t.id = :id",
+                "from Task t join fetch t.priority left join fetch t.categories WHERE t.id = :id",
                 Task.class,
                 Map.of("id", id));
     }
@@ -69,7 +69,7 @@ public class TaskRepositoryImpl implements TaskRepository {
     @Override
     public List<Task> findLikeDescription(String key) {
         return crudRepository.query(
-                "from Task t join fetch t.priority like t.description = :des",
+                "from Task t join fetch t.priority left join fetch t.categories like t.description = :des",
                 Task.class,
                 Map.of("des", key)
         );
@@ -78,7 +78,7 @@ public class TaskRepositoryImpl implements TaskRepository {
     @Override
     public List<Task> findByDone(boolean isDone) {
         return crudRepository.query(
-                "from Task t join fetch t.priority where t.done = :isDone",
+                "from Task t join fetch t.priority left join fetch t.categories where t.done = :isDone",
                 Task.class,
                 Map.of("isDone", isDone)
         );

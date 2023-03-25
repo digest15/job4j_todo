@@ -6,6 +6,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import ru.job4j.todolist.model.Task;
 import ru.job4j.todolist.model.User;
+import ru.job4j.todolist.service.CategoryService;
 import ru.job4j.todolist.service.PriorityService;
 import ru.job4j.todolist.service.TaskService;
 
@@ -19,6 +20,8 @@ public class TaskController {
     private final TaskService taskService;
 
     private final PriorityService priorityService;
+
+    private final CategoryService categoryService;
 
     @GetMapping
     public String getAll(Model model) {
@@ -98,6 +101,7 @@ public class TaskController {
             return "errors/404";
         }
         model.addAttribute("priorities", priorityService.findAll());
+        model.addAttribute("categories", categoryService.findAll());
         model.addAttribute("task", task);
         return "tasks/edit";
     }
