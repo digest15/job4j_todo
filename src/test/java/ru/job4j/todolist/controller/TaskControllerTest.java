@@ -184,7 +184,8 @@ class TaskControllerTest {
         when(taskService.update(taskArgCaptor.capture())).thenReturn(true);
 
         var model = new ConcurrentModel();
-        var view = taskController.update(task1, model);
+        var httpSession = new MockHttpSession();
+        var view = taskController.update(task1, model, httpSession);
         var captorTask = taskArgCaptor.getValue();
         var actualTask = model.getAttribute("task");
 
@@ -200,7 +201,8 @@ class TaskControllerTest {
         when(taskService.update(taskArgCaptor.capture())).thenReturn(false);
 
         var model = new ConcurrentModel();
-        var view = taskController.update(task1, model);
+        var httpSession = new MockHttpSession();
+        var view = taskController.update(task1, model, httpSession);
         var captorTask = taskArgCaptor.getValue();
         var actualMessage = model.getAttribute("message");
 

@@ -67,11 +67,14 @@ public class TaskController {
     }
 
     @PostMapping("/update")
-    public String update(@ModelAttribute Task task, Model model) {
+    public String update(@ModelAttribute Task task, Model model, HttpSession session) {
+        task.setUser((User) session.getAttribute("user"));
+
         if (!taskService.update(task)) {
             model.addAttribute("message", "Error when update task " + task);
             return "errors/404";
         }
+
         model.addAttribute("task", task);
         return "redirect:/tasks/" + task.getId();
     }
