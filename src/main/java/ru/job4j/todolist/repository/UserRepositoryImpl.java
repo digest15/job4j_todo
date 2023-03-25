@@ -54,4 +54,12 @@ public class UserRepositoryImpl implements UserRepository {
                 Map.of("id", id)
         );
     }
+
+    @Override
+    public boolean delete(User user) {
+        return crudRepository.run(session -> {
+            session.delete(user);
+            return true;
+        });
+    }
 }
