@@ -43,7 +43,7 @@
             <div class="mb-3">
                 <label for="priority"><b>Приоритет</b></label>
                 <select class="form-control" id="priority" name="priority.id">
-                    <option th:each="pr : ${priorities}" th:value="${pr.id}" th:text="${pr.name}" th:field="*{priority}" th:selected="${pr.id==task.priority.id}"></option>
+                    <option th:each="pr : ${priorities}" th:value="${pr.id}" th:text="${pr.name}" th:field="*{priority.id}" th:selected="${pr.id == task.priority.id}"></option>
                 </select>
             </div>
             <div class="mb-3">
