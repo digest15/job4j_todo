@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.ui.ConcurrentModel;
+import ru.job4j.todolist.model.Category;
 import ru.job4j.todolist.model.Priority;
 import ru.job4j.todolist.model.Task;
 import ru.job4j.todolist.service.CategoryService;
@@ -12,6 +13,7 @@ import ru.job4j.todolist.service.PriorityService;
 import ru.job4j.todolist.service.TaskService;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -85,31 +87,40 @@ class TaskControllerTest {
     public void whenGetCreationPage() {
         var high = new Priority(0, "High", 1);
         var low = new Priority(0, "low", 2);
+        var c1 = new Category(1);
+        var c2 = new Category(2);
+
         when(priorityService.findAll()).thenReturn(List.of(high, low));
+        when(categoryService.findAll()).thenReturn(List.of(c1, c2));
 
         var model = new ConcurrentModel();
         var view = taskController.getCreationPage(model);
         var priorities = model.getAttribute("priorities");
+        var categories = model.getAttribute("categories");
 
         assertThat(view).isEqualTo("tasks/create");
         assertThat(priorities).isEqualTo(List.of(high, low));
+        assertThat(categories).isEqualTo(List.of(c1, c2));
     }
 
     @Test
     public void whenPostTask() {
+        var categories = List.of(new Category(1), new Category(2));
         var priority = new Priority(0, "high", 1);
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null, priority, null);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null, priority, new ArrayList<>());
+
         var taskArgCaptor = ArgumentCaptor.forClass(Task.class);
         when(taskService.add(taskArgCaptor.capture())).thenReturn(task1);
 
         var model = new ConcurrentModel();
         var httpSession = new MockHttpSession();
-        var view = taskController.create(task1, model, httpSession);
+        var view = taskController.create(task1, model, List.of(1, 2), httpSession);
         var actualTask = taskArgCaptor.getValue();
 
         assertThat(view).isEqualTo("redirect:/tasks");
         assertThat(actualTask).isEqualTo(task1);
         assertThat(actualTask.getPriority()).isEqualTo(priority);
+        assertThat(actualTask.getCategories()).isEqualTo(categories);
     }
 
     @Test
@@ -122,7 +133,7 @@ class TaskControllerTest {
 
         var model = new ConcurrentModel();
         var httpSession = new MockHttpSession();
-        var view = taskController.create(task1, model, httpSession);
+        var view = taskController.create(task1, model, List.of(), httpSession);
         var errorMessage = model.getAttribute("message");
 
         assertThat(view).isEqualTo("errors/404");
@@ -137,7 +148,7 @@ class TaskControllerTest {
 
         var model = new ConcurrentModel();
         var httpSession = new MockHttpSession();
-        var view = taskController.create(task1, model, httpSession);
+        var view = taskController.create(task1, model, List.of(), httpSession);
         var errorMessage = model.getAttribute("message");
     }
 
@@ -183,19 +194,24 @@ class TaskControllerTest {
 
     @Test
     public void whenUpdateTask() {
-        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null, null, null);
+        var categories = List.of(new Category(1), new Category(2));
+        var priority = new Priority(0, "high", 1);
+        var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null, priority, new ArrayList<>());
+
         var taskArgCaptor = ArgumentCaptor.forClass(Task.class);
         when(taskService.update(taskArgCaptor.capture())).thenReturn(true);
 
         var model = new ConcurrentModel();
         var httpSession = new MockHttpSession();
-        var view = taskController.update(task1, model, httpSession);
+        var view = taskController.update(task1, model, List.of(1, 2), httpSession);
         var captorTask = taskArgCaptor.getValue();
-        var actualTask = model.getAttribute("task");
+        var actualTask = (Task) model.getAttribute("task");
 
         assertThat(view).isEqualTo("redirect:/tasks/" + task1.getId());
         assertThat(actualTask).isEqualTo(task1);
         assertThat(captorTask).isEqualTo(task1);
+        assertThat(actualTask.getPriority()).isEqualTo(priority);
+        assertThat(actualTask.getCategories()).isEqualTo(categories);
     }
 
     @Test
@@ -206,7 +222,7 @@ class TaskControllerTest {
 
         var model = new ConcurrentModel();
         var httpSession = new MockHttpSession();
-        var view = taskController.update(task1, model, httpSession);
+        var view = taskController.update(task1, model, List.of(), httpSession);
         var captorTask = taskArgCaptor.getValue();
         var actualMessage = model.getAttribute("message");
 
@@ -220,12 +236,16 @@ class TaskControllerTest {
         var task1 = new Task(0, "Task1", LocalDateTime.now(), false, null, null, null);
         when(taskService.findById(any(Integer.class))).thenReturn(task1);
 
+        var categories = List.of(new Category(1), new Category(2));
+        when(categoryService.findAll()).thenReturn(categories);
+
         var model = new ConcurrentModel();
         var view = taskController.getById(model, task1.getId());
         var actualTask = model.getAttribute("task");
+        var actualCategories = model.getAttribute("categories");
 
         assertThat(view).isEqualTo("tasks/one");
-        assertThat(actualTask).isEqualTo(task1);
+        assertThat(actualCategories).isEqualTo(categories);
     }
 
     @Test
@@ -249,14 +269,18 @@ class TaskControllerTest {
         var priority = new Priority(0, "high", 1);
         when(priorityService.findAll()).thenReturn(List.of(priority));
 
+        when(categoryService.findAll()).thenReturn(List.of(new Category(1), new Category(2)));
+
         var model = new ConcurrentModel();
         var view = taskController.edit(model, task1.getId());
         var actualTask = model.getAttribute("task");
         var priorities = model.getAttribute("priorities");
+        var categories = model.getAttribute("categories");
 
         assertThat(view).isEqualTo("tasks/edit");
         assertThat(actualTask).isEqualTo(task1);
         assertThat(priorities).isEqualTo(List.of(priority));
+        assertThat(categories).isEqualTo(List.of(new Category(1), new Category(2)));
     }
 
     @Test

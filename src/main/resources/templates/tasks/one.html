@@ -44,8 +44,17 @@
                 <input class="form-control w-25" id="priority" name="created" th:field="*{priority.name}" readonly>
             </div>
             <div class="mb-3">
+                <label for="category"><b>Категории</b></label>
+                <select class="form-control" id="category" name="categories.id" multiple disabled>
+                    <option th:each="ct : ${categories}"
+                            th:value="${ct.id}"
+                            th:text="${ct.name}"
+                            th:selected="${task.categories.contains(ct)}"></option>
+                </select>
+            </div>
+            <div class="mb-3">
                 <label for="description" class="form-label"><b>Описание</b></label>
-                <textarea class="form-control" id="description" name="description" rows="25" placeholder="Что сделать?" th:field="*{description}" readonly></textarea>
+                <textarea class="form-control" id="description" name="description" rows="15" placeholder="Что сделать?" th:field="*{description}" readonly></textarea>
             </div>
             <div class="form-check mb-3">
                 <input type="checkbox" name="isDone" class="form-check-input" id="isDone" th:field="*{done}" disabled>

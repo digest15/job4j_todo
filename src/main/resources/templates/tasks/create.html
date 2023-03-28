@@ -41,8 +41,17 @@
                 </select>
             </div>
             <div class="mb-3">
+                <label for="category"><b>Категории</b></label>
+                <select class="form-control" id="category" name="categories.id" multiple>
+                    <option th:each="ct : ${categories}"
+                            th:value="${ct.id}"
+                            th:text="${ct.name}"
+                            th:selected="${ct.id==1}"></option>
+                </select>
+            </div>
+            <div class="mb-3">
                 <label for="description" class="form-label"><b>Описание</b></label>
-                <textarea class="form-control" id="description" name="description" rows="25" placeholder="Что сделать?"></textarea>
+                <textarea class="form-control" id="description" name="description" rows="15" placeholder="Что сделать?"></textarea>
             </div>
             <div class="mb-3 row">
                 <div class="col-6"></div>

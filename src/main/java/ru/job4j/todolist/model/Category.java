@@ -15,6 +15,10 @@ import javax.persistence.*;
 @Table(name = "categories")
 public class Category {
 
+    public Category(int id) {
+        this.id = id;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include

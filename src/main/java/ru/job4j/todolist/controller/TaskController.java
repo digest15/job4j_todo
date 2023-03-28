@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import ru.job4j.todolist.model.Category;
 import ru.job4j.todolist.model.Task;
 import ru.job4j.todolist.model.User;
 import ru.job4j.todolist.service.CategoryService;
@@ -11,6 +12,7 @@ import ru.job4j.todolist.service.PriorityService;
 import ru.job4j.todolist.service.TaskService;
 
 import javax.servlet.http.HttpSession;
+import java.util.List;
 
 @Controller
 @RequestMapping("/tasks")
@@ -44,12 +46,17 @@ public class TaskController {
     @GetMapping("/create")
     public String getCreationPage(Model model) {
         model.addAttribute("priorities", priorityService.findAll());
+        model.addAttribute("categories", categoryService.findAll());
         return "tasks/create";
     }
 
     @PostMapping("/create")
-    public String create(@ModelAttribute Task task, Model model, HttpSession session) {
+    public String create(@ModelAttribute Task task, Model model, @RequestParam(name = "categories.id") List<Integer> categorieIds, HttpSession session) {
         task.setUser((User) session.getAttribute("user"));
+        categorieIds.forEach(
+                id -> task.getCategories().add(new Category(id))
+        );
+
         Task newTask = taskService.add(task);
 
         if (newTask == null) {
@@ -70,8 +77,12 @@ public class TaskController {
     }
 
     @PostMapping("/update")
-    public String update(@ModelAttribute Task task, Model model, HttpSession session) {
+    public String update(@ModelAttribute Task task, Model model, @RequestParam(name = "categories.id") List<Integer> categorieIds, HttpSession session) {
         task.setUser((User) session.getAttribute("user"));
+
+        categorieIds.forEach(
+                id -> task.getCategories().add(new Category(id))
+        );
 
         if (!taskService.update(task)) {
             model.addAttribute("message", "Error when update task " + task);
@@ -89,6 +100,7 @@ public class TaskController {
             model.addAttribute("message", "Not found task by ID: " + id);
             return "errors/404";
         }
+        model.addAttribute("categories", categoryService.findAll());
         model.addAttribute("task", task);
         return "tasks/one";
     }
