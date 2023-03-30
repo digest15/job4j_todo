@@ -43,7 +43,7 @@ class UserRepositoryImplTest {
 
     @Test
     public void whenSaveThenGetSame() {
-        var user = userRepository.add(new User(0, "User1", "User1", "123"));
+        var user = userRepository.add(new User(0, "User1", "User1", "123", "UTC"));
         assertThat(user).isNotNull();
 
         var users = userRepository.findAll();
@@ -52,18 +52,18 @@ class UserRepositoryImplTest {
 
     @Test
     public void whenSaveTwiceThenNotAdd() {
-        var user1 = userRepository.add(new User(0, "User1", "User1", "123"));
+        var user1 = userRepository.add(new User(0, "User1", "User1", "123", "UTC"));
         assertThat(user1).isNotNull();
 
-        var user2 = userRepository.add(new User(0, "User1", "User1", "123"));
+        var user2 = userRepository.add(new User(0, "User1", "User1", "123", "UTC"));
         assertThat(user2).isNull();
     }
 
     @Test
     public void whenSaveSeveralThenGetAll() {
-        var user1 = userRepository.add(new User(0, "User1", "User1", "123"));
-        var user2 = userRepository.add(new User(0, "User2", "User2", "123"));
-        var user3 = userRepository.add(new User(0, "User3", "User3", "123"));
+        var user1 = userRepository.add(new User(0, "User1", "User1", "123", "UTC"));
+        var user2 = userRepository.add(new User(0, "User2", "User2", "123", "UTC"));
+        var user3 = userRepository.add(new User(0, "User3", "User3", "123", "UTC"));
 
         var users = userRepository.findAll();
         assertThat(users).isEqualTo(List.of(user1, user2, user3));
@@ -71,7 +71,7 @@ class UserRepositoryImplTest {
 
     @Test
     public void whenFindById() {
-        var user = userRepository.add(new User(0, "User1", "User1", "123"));
+        var user = userRepository.add(new User(0, "User1", "User1", "123", "UTC"));
 
         var foundUser = userRepository.findById(user.getId());
         assertThat(foundUser.isPresent()).isTrue();
@@ -90,7 +90,7 @@ class UserRepositoryImplTest {
 
     @Test
     public void whenDelete() {
-        var user = userRepository.add(new User(0, "User1", "User1", "123"));
+        var user = userRepository.add(new User(0, "User1", "User1", "123", "UTC"));
 
         var isDelete = userRepository.delete(user.getId());
         Optional<User> expectedEmty = userRepository.findById(user.getId());
@@ -104,8 +104,8 @@ class UserRepositoryImplTest {
 
     @Test
     public void whenFindByLoginAndPassword() {
-        var user1 = userRepository.add(new User(0, "User1", "User1", "123"));
-        var user2 = userRepository.add(new User(0, "User2", "User2", "123"));
+        var user1 = userRepository.add(new User(0, "User1", "User1", "123", "UTC"));
+        var user2 = userRepository.add(new User(0, "User2", "User2", "123", "UTC"));
 
         Optional<User> foundUser = userRepository.findByLoginAndPassword(user1.getLogin(), user1.getPassword());
         assertThat(foundUser.isPresent()).isTrue();

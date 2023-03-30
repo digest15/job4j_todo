@@ -29,13 +29,18 @@ class UserControllerTest {
 
     @Test
     void whenGetRegistrationPage() {
-        var view = userController.getRegistrationPage();
+        var model = new ConcurrentModel();
+        var view = userController.getRegistrationPage(model);
+        var zones = (String[]) model.getAttribute("zones");
+
         assertThat(view).isEqualTo("users/create");
+        assertThat(zones).isNotNull();
+        assertThat(zones).isNotEmpty();
     }
 
     @Test
     void whenRegisterNewUserThenRedirectToHomePage() {
-        var user = new User(0, "name", "login", "password");
+        var user = new User(0, "name", "login", "password", "UTC");
         var userArgumentCaptor = ArgumentCaptor.forClass(User.class);
         when(userService.add(userArgumentCaptor.capture())).thenReturn(user);
 
@@ -48,7 +53,7 @@ class UserControllerTest {
 
     @Test
     void whenRegisterOldUserThenRedirectToErrorPage() {
-        var user = new User(0, "name", "login", "password");
+        var user = new User(0, "name", "login", "password", "UTC");
         var userArgumentCaptor = ArgumentCaptor.forClass(User.class);
         when(userService.add(userArgumentCaptor.capture())).thenReturn(null);
 
@@ -69,7 +74,7 @@ class UserControllerTest {
 
     @Test
     void whenPostLoginUserThenRedirectToTasksAndUserInSession() {
-        var user = new User(0, "name", "login", "password");
+        var user = new User(0, "name", "login", "password", "UTC");
         when(userService.findByLoginAndPassword(any(), any())).thenReturn(Optional.of(user));
         MockHttpServletRequest request = new MockHttpServletRequest();
 
@@ -83,7 +88,7 @@ class UserControllerTest {
 
     @Test
     void whenPostLoginWithWrongUserThenRedirectToErrorPage() {
-        var user = new User(0, "name", "login", "password");
+        var user = new User(0, "name", "login", "password", "UTC");
         when(userService.findByLoginAndPassword(any(), any())).thenReturn(Optional.empty());
         MockHttpServletRequest request = new MockHttpServletRequest();
 
@@ -97,7 +102,7 @@ class UserControllerTest {
 
     @Test
     void whenLoginAndLogoutThenRedirectLoginPageAndEmptySession() {
-        var user = new User(0, "name", "login", "password");
+        var user = new User(0, "name", "login", "password", "UTC");
         when(userService.findByLoginAndPassword(any(), any())).thenReturn(Optional.of(user));
         MockHttpServletRequest request = new MockHttpServletRequest();
 

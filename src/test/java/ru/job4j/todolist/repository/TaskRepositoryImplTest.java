@@ -72,7 +72,7 @@ class TaskRepositoryImplTest {
 
     @Test
     public void whenSaveThenGetSame() {
-        var user = userRepository.add(new User(0, "admin", "admin", "123"));
+        var user = userRepository.add(new User(0, "admin", "admin", "123", "UTC"));
         var priority = priorityRepository.add(new Priority(0, "high", 1));
         var category1 = categoryRepository.add(new Category(0, "Category1"));
         var category2 = categoryRepository.add(new Category(0, "Category2"));
@@ -95,7 +95,7 @@ class TaskRepositoryImplTest {
 
     @Test
     public void whenSaveSeveralThenGetAll() {
-        var user = userRepository.add(new User(0, "admin", "admin", "123"));
+        var user = userRepository.add(new User(0, "admin", "admin", "123", "UTC"));
         var priority = priorityRepository.add(new Priority(0, "high", 1));
         var creationDate = now().truncatedTo(ChronoUnit.MINUTES);
 
@@ -145,7 +145,7 @@ class TaskRepositoryImplTest {
 
     @Test
     public void whenDeleteThenGetEmptyOptional() {
-        var user = userRepository.add(new User(0, "admin", "admin", "123"));
+        var user = userRepository.add(new User(0, "admin", "admin", "123", "UTC"));
         var creationDate = now().truncatedTo(ChronoUnit.MINUTES);
         var priority = priorityRepository.add(new Priority(0, "high", 1));
         var task = taskRepository.add(Task.builder()
@@ -172,8 +172,8 @@ class TaskRepositoryImplTest {
 
     @Test
     public void whenUpdateThenGetUpdated() {
-        var user1 = userRepository.add(new User(0, "admin", "admin", "123"));
-        var user2 = userRepository.add(new User(0, "admin1", "admin1", "123"));
+        var user1 = userRepository.add(new User(0, "admin", "admin", "123", "UTC"));
+        var user2 = userRepository.add(new User(0, "admin1", "admin1", "123", "UTC"));
         var creationDate = now().truncatedTo(ChronoUnit.MINUTES);
         var priority = priorityRepository.add(new Priority(0, "high", 1));
         var task = taskRepository.add(Task.builder()
